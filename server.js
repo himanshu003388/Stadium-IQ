@@ -26,7 +26,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 // EFFICIENCY: Single GoogleGenerativeAI instance (module scope)
 // Re-used across all requests — not instantiated per-call
 // =========================================
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 let genAIInstance = null;
 function getGenAI() {
   if (!genAIInstance && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY') {

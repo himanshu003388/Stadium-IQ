@@ -130,7 +130,7 @@ npm install
 ### Configuration
 Create a `.env` file in the root directory to configure the Gemini API:
 ```env
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 > [!NOTE]  
 > If no API key is specified, the application will automatically activate **Demo Mode** which simulates smart, context-aware AI interactions using an offline parser.
