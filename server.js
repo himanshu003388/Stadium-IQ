@@ -11,6 +11,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import fs from 'fs';
+import path from 'path';
 import rateLimit from 'express-rate-limit';
 import NodeCache from 'node-cache';
 import { JSDOM } from 'jsdom';
@@ -155,6 +156,11 @@ const API_AUTH_KEY = process.env.API_AUTH_KEY;
 function authenticateApiKey(req, res, next) {
   // In production, enforce key even if not configured — fail safe
   if (isProduction && (!API_AUTH_KEY || API_AUTH_KEY === 'your-api-auth-key')) {
+    // Fallback: allow requests from our web frontend with valid CSRF tokens
+    const csrfToken = req.headers['x-csrf-token'];
+    if (csrfToken && validateCsrfToken(csrfToken)) {
+      return next();
+    }
     return res.status(503).json({
       error: 'Service temporarily unavailable. API authentication not configured.',
     });
@@ -166,6 +172,11 @@ function authenticateApiKey(req, res, next) {
   // Accept only header-based auth — never from query string (prevents key leakage in logs/history)
   const providedKey = req.headers['x-api-key'];
   if (!providedKey || providedKey !== API_AUTH_KEY) {
+    // Fallback: allow requests from our web frontend with valid CSRF tokens
+    const csrfToken = req.headers['x-csrf-token'];
+    if (csrfToken && validateCsrfToken(csrfToken)) {
+      return next();
+    }
     return res.status(401).json({ error: 'Unauthorized. Valid API key required.' });
   }
   next();
@@ -271,7 +282,7 @@ function sanitizeInput(input) {
 // =========================================
 // API: Health check
 // =========================================
-app.get('/api/health', authenticateApiKey, (_req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -569,6 +580,19 @@ Stadium Context: ${safeContext}`;
     res.end();
   }
 });
+
+// =========================================
+// Production static serving
+// =========================================
+if (isProduction) {
+  // Serve static files from Vite build folder
+  app.use(express.static(path.resolve('dist')));
+
+  // Fallback to index.html for SPA routing
+  app.get('*all', (req, res) => {
+    res.sendFile(path.resolve('dist', 'index.html'));
+  });
+}
 
 // =========================================
 // Server startup
