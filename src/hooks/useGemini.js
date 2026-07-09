@@ -271,7 +271,7 @@ export function useGemini(stadiumContext) {
             let errorData = {};
             try {
               errorData = await res.json();
-            } catch (_e) {}
+            } catch {}
 
             if (
               res.status === 400 &&

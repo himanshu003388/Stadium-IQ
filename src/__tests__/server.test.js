@@ -5,7 +5,7 @@
  * These functions are exported for testing via the ESM test harness.
  * Run with: npm test (vitest)
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import crypto from 'crypto';
 
 // ─── Re-implement the pure functions under test ───────────────────────────────

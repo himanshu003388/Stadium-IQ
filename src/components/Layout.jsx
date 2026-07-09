@@ -74,6 +74,7 @@ function LayoutInner() {
           <Sidebar activeView={activeView} setActiveView={setActiveView} />
           <main
             id="main-content"
+            tabIndex={-1}
             className="flex-1 md:ml-72 overflow-y-auto min-h-[calc(100vh-5rem)] pb-16 md:pb-0 custom-scrollbar"
             role="main"
             aria-label="Main content area"

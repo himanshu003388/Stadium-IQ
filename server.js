@@ -388,9 +388,15 @@ app.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) => {
         .json({ error: 'Message contains no valid content after sanitization.' });
     }
 
+    const normalizedMessage = sanitizedMessage.toLowerCase().replace(/\s+/g, ' ').trim();
     const cacheKey = crypto
       .createHash('sha256')
-      .update(JSON.stringify({ sanitizedMessage, language }))
+      .update(
+        JSON.stringify({
+          message: normalizedMessage,
+          language: (language || 'en').toLowerCase(),
+        }),
+      )
       .digest('hex');
     const cachedResponse = queryCache.get(cacheKey);
     if (cachedResponse) {
@@ -492,19 +498,39 @@ app.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, res
   if (!sanitizedMessage) {
     return res.status(400).json({ error: 'Message contains no valid content after sanitization.' });
   }
-
-  const genAI = getGenAI();
-  if (!genAI) {
-    return res
-      .status(400)
-      .json({ error: 'Gemini API Key is missing or invalid in server environment.' });
-  }
+  const normalizedMessage = sanitizedMessage.toLowerCase().replace(/\s+/g, ' ').trim();
+  const cacheKey = crypto
+    .createHash('sha256')
+    .update(
+      JSON.stringify({
+        message: normalizedMessage,
+        language: (language || 'en').toLowerCase(),
+      }),
+    )
+    .digest('hex');
 
   // Set SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering
+
+  const cachedResponse = queryCache.get(cacheKey);
+  if (cachedResponse) {
+    res.write(`data: ${JSON.stringify({ chunk: cachedResponse, requestId })}\n\n`);
+    res.write(`data: ${JSON.stringify({ done: true, requestId })}\n\n`);
+    res.end();
+    return;
+  }
+
+  const genAI = getGenAI();
+  if (!genAI) {
+    res.write(
+      `data: ${JSON.stringify({ error: 'Gemini API Key is missing or invalid in server environment.', requestId })}\n\n`,
+    );
+    res.end();
+    return;
+  }
 
   const safeCtx = buildSafeContext(contextData);
   const safeContext = JSON.stringify(safeCtx).slice(0, 5000);
@@ -520,14 +546,20 @@ Stadium Context: ${safeContext}`;
       { role: 'user', parts: [{ text: `${systemPrompt}\n\nUser: ${sanitizedMessage}` }] },
     ]);
 
+    let fullText = '';
     for await (const chunk of streamResult.stream) {
       const text = chunk.text();
       if (text) {
         const safeChunk = text
           .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
           .replace(/<[^>]*>/g, '');
+        fullText += safeChunk;
         res.write(`data: ${JSON.stringify({ chunk: safeChunk, requestId })}\n\n`);
       }
+    }
+    if (fullText) {
+      const cleanFullText = fullText.slice(0, 10000);
+      queryCache.set(cacheKey, cleanFullText);
     }
     res.write(`data: ${JSON.stringify({ done: true, requestId })}\n\n`);
   } catch (err) {

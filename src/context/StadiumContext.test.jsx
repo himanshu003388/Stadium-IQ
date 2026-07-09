@@ -2,7 +2,7 @@
  * StadiumContext Tests
  * Tests simulation tick, all context actions, and visibility-based pausing
  */
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { StadiumProvider, useStadiumData } from './StadiumContext';
 
@@ -171,7 +171,7 @@ describe('StadiumContext', () => {
       ref.current.setIsSimulating(false);
     });
 
-    const densityBefore = [...ref.current.contextData.gates.map((g) => g.density)];
+    const densityBefore = ref.current.contextData.gates.map((g) => g.density);
     await act(async () => {
       vi.advanceTimersByTime(8001);
     });

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * ErrorBoundary Component Tests
  * Tests error capture, production-safe display, and recovery

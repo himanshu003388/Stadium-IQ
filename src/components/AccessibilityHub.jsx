@@ -1,5 +1,4 @@
 import React, { useState, useMemo, memo } from 'react';
-import PropTypes from 'prop-types';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS } from '../utils/styles';
 import { getDemoResponse } from '../utils/helpers';

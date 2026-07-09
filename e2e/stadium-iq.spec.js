@@ -28,41 +28,41 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should navigate to GenAI Assistant when clicking nav item', async ({ page }) => {
-    await page.getByLabel('GenAI Assistant').click();
+    await page.locator('button[aria-label="GenAI Assistant"]:visible').click();
     await expect(page.getByText(/FIFA World Cup 2026 GenAI Assistant/)).toBeVisible();
     await expect(page.getByPlaceholder(/Ask Stadium IQ/)).toBeVisible();
   });
 
   test('should navigate to Crowd & Navigation view', async ({ page }) => {
-    await page.getByLabel('Crowd & Navigation').click();
+    await page.locator('button[aria-label="Crowd & Navigation"]:visible').click();
     await expect(page.getByText(/Live stadium map/)).toBeVisible();
   });
 
   test('should navigate to Volunteer Dispatch', async ({ page }) => {
-    await page.getByLabel('Volunteer Dispatch').click();
+    await page.locator('button[aria-label="Volunteer Dispatch"]:visible').click();
     await expect(page.getByText(/AI-powered task assignment/)).toBeVisible();
   });
 
   test('should navigate to Transport Hub', async ({ page }) => {
-    await page.getByLabel('Transport Hub').click();
+    await page.locator('button[aria-label="Transport Hub"]:visible').click();
     await expect(page.getByText(/Post-match departure options/)).toBeVisible();
   });
 
   test('should navigate to Sustainability Dashboard', async ({ page }) => {
-    await page.getByLabel('Sustainability').click();
+    await page.locator('button[aria-label="Sustainability"]:visible').click();
     await expect(page.getByText(/Sustainability Dashboard/)).toBeVisible();
   });
 
   test('should display Command Center KPIs', async ({ page }) => {
-    await expect(page.getByText('Crowd Density')).toBeVisible();
-    await expect(page.getByText('Occupancy')).toBeVisible();
-    await expect(page.getByText('Temperature')).toBeVisible();
+    await expect(page.getByText('Crowd Density', { exact: true })).toBeVisible();
+    await expect(page.getByText('Occupancy', { exact: true })).toBeVisible();
+    await expect(page.getByText('Temperature', { exact: true })).toBeVisible();
   });
 
   test('should have working skip-to-content link for keyboard users', async ({ page }) => {
     // Tab to skip link
     await page.keyboard.press('Tab');
-    const skipLink = page.getByText('Skip to main content');
+    const skipLink = page.getByRole('link', { name: 'Skip to main content' }).first();
     if (await skipLink.isVisible()) {
       await skipLink.click();
       await expect(page.locator('#main-content')).toBeFocused();
@@ -70,7 +70,7 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should toggle Eco Mode on Sustainability page', async ({ page }) => {
-    await page.getByLabel('Sustainability').click();
+    await page.locator('button[aria-label="Sustainability"]:visible').click();
     const ecoButton = page.getByRole('button', { name: /Eco Mode/i });
     await ecoButton.click();
     await expect(page.getByText(/Eco Mode Activated/)).toBeVisible();
@@ -78,13 +78,13 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should display transport options sorted by AI recommendation', async ({ page }) => {
-    await page.getByLabel('Transport Hub').click();
+    await page.locator('button[aria-label="Transport Hub"]:visible').click();
     // Check that the recommended badge appears
     await expect(page.getByText(/Recommended/).first()).toBeVisible();
     // Sort buttons should be present
-    await expect(page.getByText('AI Recommended')).toBeVisible();
-    await expect(page.getByText('Fastest')).toBeVisible();
-    await expect(page.getByText('Most Eco')).toBeVisible();
+    await expect(page.getByText('AI Recommended', { exact: true })).toBeVisible();
+    await expect(page.getByText('Fastest', { exact: true })).toBeVisible();
+    await expect(page.getByText('Most Eco', { exact: true })).toBeVisible();
   });
 
   test('should be keyboard navigable through sidebar', async ({ page }) => {
@@ -115,7 +115,7 @@ test.describe('Stadium IQ Application', () => {
 
   test('should send a message in AI chat and receive a demo response', async ({ page }) => {
     // Navigate to the AI assistant panel
-    await page.getByLabel('GenAI Assistant').click();
+    await page.locator('button[aria-label="GenAI Assistant"]:visible').click();
     await expect(page.getByPlaceholder(/Ask Stadium IQ/)).toBeVisible();
 
     // Type and send a message
@@ -138,13 +138,13 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should disable send button when input is empty', async ({ page }) => {
-    await page.getByLabel('GenAI Assistant').click();
+    await page.locator('button[aria-label="GenAI Assistant"]:visible').click();
     const sendBtn = page.getByRole('button', { name: /send/i });
     await expect(sendBtn).toBeDisabled();
   });
 
   test('should send a message using Enter key', async ({ page }) => {
-    await page.getByLabel('GenAI Assistant').click();
+    await page.locator('button[aria-label="GenAI Assistant"]:visible').click();
     const input = page.getByPlaceholder(/Ask Stadium IQ/);
     await input.fill('Tell me about transport options');
     await input.press('Enter');
@@ -156,7 +156,7 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should allow changing AI language and show the selection', async ({ page }) => {
-    await page.getByLabel('GenAI Assistant').click();
+    await page.locator('button[aria-label="GenAI Assistant"]:visible').click();
 
     // Open the language selector
     const langBtn = page.getByRole('button', { name: /Select language/i });
@@ -170,16 +170,15 @@ test.describe('Stadium IQ Application', () => {
     await page.getByText('Español').click();
 
     // Language button should now show ES flag
-    await expect(langBtn).toContainText('ES');
+    await expect(langBtn).toContainText('Español');
   });
 
   test('should show quick prompt buttons that send messages when clicked', async ({ page }) => {
-    await page.getByLabel('GenAI Assistant').click();
+    await page.locator('button[aria-label="GenAI Assistant"]:visible').click();
+    await expect(page.getByPlaceholder(/Ask Stadium IQ/)).toBeVisible();
 
     // Find quick prompt pills
-    const quickBtns = page
-      .locator('button:not([name])')
-      .filter({ hasText: /navigate|gate|transport|accessibility/i });
+    const quickBtns = page.locator('button').filter({ hasText: /crowded|match|services/i });
     const count = await quickBtns.count();
 
     if (count > 0) {
@@ -190,7 +189,7 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should navigate to Gate from CrowdMap using directions link', async ({ page }) => {
-    await page.getByLabel('Crowd & Navigation').click();
+    await page.locator('button[aria-label="Crowd & Navigation"]:visible').click();
     await expect(page.getByText(/Live stadium map/)).toBeVisible();
 
     // Each gate should have a navigation directions link
@@ -200,6 +199,6 @@ test.describe('Stadium IQ Application', () => {
 
     // Verify the link opens Google Maps (href check)
     const href = await directionLinks.first().getAttribute('href');
-    expect(href).toContain('maps.google.com');
+    expect(href).toContain('google.com/maps');
   });
 });
